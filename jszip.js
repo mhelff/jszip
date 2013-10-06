@@ -640,6 +640,7 @@ JSZip.prototype = (function () {
        * - base64, (deprecated, use type instead) true to generate base64.
        * - compression, "STORE" by default.
        * - type, "base64" by default. Values are : string, base64, uint8array, arraybuffer, blob.
+       * - mimeType, if given will be the mimeType of the generated blob. Defaults to "application/zip"
        * @return {String|Uint8Array|ArrayBuffer|Buffer|Blob} the zip file
        */
       generate : function(options) {
@@ -729,7 +730,7 @@ JSZip.prototype = (function () {
             case "nodebuffer" :
                return JSZip.utils.transformTo(options.type.toLowerCase(), zip);
             case "blob" :
-               return JSZip.utils.arrayBuffer2Blob(JSZip.utils.transformTo("arraybuffer", zip));
+               return JSZip.utils.arrayBuffer2Blob(JSZip.utils.transformTo("arraybuffer", zip), options.mimeType);
 
             // case "zip is a string"
             case "base64" :
@@ -1044,15 +1045,20 @@ JSZip.support = {
       /**
        * Create a blob from the given ArrayBuffer.
        * @param {ArrayBuffer} buffer the buffer to transform.
+       * @param {String} mimeType the mimetype of the blob. If not given, defaults to application/zip
        * @return {Blob} the result.
        * @throws {Error} an Error if the browser doesn't support the requested feature.
        */
-      arrayBuffer2Blob : function (buffer) {
+      arrayBuffer2Blob : function (buffer, mimeType) {
          JSZip.utils.checkSupport("blob");
 
+ 	     if (!mimeType) {
+ 	     	mimeType = "application/zip";
+ 	     }
+ 	     
          try {
             // Blob constructor
-            return new Blob([buffer], { type: "application/zip" });
+            return new Blob([buffer], { type: mimeType });
          }
          catch(e) {}
 
@@ -1061,7 +1067,7 @@ JSZip.support = {
             var builder = new (window.BlobBuilder || window.WebKitBlobBuilder ||
                                window.MozBlobBuilder || window.MSBlobBuilder)();
             builder.append(buffer);
-            return builder.getBlob('application/zip');
+            return builder.getBlob(mimeType);
          }
          catch(e) {}
 
